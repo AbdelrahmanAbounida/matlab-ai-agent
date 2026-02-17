@@ -1,0 +1,22 @@
+# MATLAB Bridge Server Requirements
+
+# Web framework
+flask>=3.0.0
+flask-cors>=4.0.0
+
+# Utilities
+python-dotenv>=1.0.0
+
+# Note: matlab.engine is installed separately via MATLAB
+# See: https://www.mathworks.com/help/matlab/matlab_external/install-the-matlab-engine-for-python.html
+#
+# Installation steps:
+# 1. Navigate to MATLAB's Python engine folder:
+#    cd "matlabroot/extern/engines/python"
+# 2. Install the engine:
+#    python -m pip install .
+#
+# Replace "matlabroot" with your MATLAB installation path, e.g.:
+# - Windows: C:\Program Files\MATLAB\R2024a
+# - macOS: /Applications/MATLAB_R2024a.app
+# - Linux: /usr/local/MATLAB/R2024a
