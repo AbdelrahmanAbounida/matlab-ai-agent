@@ -69,17 +69,39 @@ export function ModelSettingsDialog({
   const [showApiKey, setShowApiKey] = useState(false);
   const [gatewayModels, setGatewayModels] = useState<{ id: string; name: string }[]>([]);
   const [modelComboOpen, setModelComboOpen] = useState(false);
+  const [modelSearch, setModelSearch] = useState("");
 
   useEffect(() => {
-    if (open) {
-      setProviderId(currentConfig?.providerId ?? "openai");
-      setApiKey(currentConfig?.apiKey ?? "");
-      setModelId(currentConfig?.modelId ?? "");
-      setValidation(currentConfig ? "valid" : "idle");
-      setValidationError("");
-      setGatewayModels([]);
+  if (open) {
+    setProviderId(currentConfig?.providerId ?? "openai");
+    setApiKey(currentConfig?.apiKey ?? "");
+    setModelId(currentConfig?.modelId ?? "");
+    setValidation(currentConfig ? "valid" : "idle");
+    setValidationError("");
+    setGatewayModels([]);
+
+    // Re-fetch dynamic models (e.g. Vercel) when reopening with an existing config
+    if (currentConfig?.providerId === "vercel" && currentConfig.apiKey) {
+      fetch("/api/validate-key", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          providerId: currentConfig.providerId,
+          apiKey: currentConfig.apiKey,
+        }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.valid && data.models) {
+            setGatewayModels(data.models);
+          }
+        })
+        .catch(() => {
+          // silently fail — user can re-validate manually
+        });
     }
-  }, [open, currentConfig]);
+  }
+}, [open, currentConfig]);
 
   const provider = getProvider(providerId);
 
@@ -89,6 +111,14 @@ export function ModelSettingsDialog({
     }
     return provider.models;
   }, [providerId, gatewayModels, provider.models]);
+
+  const filteredModels = useMemo(() => {
+    if (!modelSearch) return availableModels;
+    const q = modelSearch.toLowerCase();
+    return availableModels.filter(
+      (m) => m.name.toLowerCase().includes(q) || m.id.toLowerCase().includes(q)
+    );
+  }, [availableModels, modelSearch]);
 
   const handleProviderChange = (value: string) => {
     setProviderId(value as ProviderId);
@@ -245,7 +275,7 @@ export function ModelSettingsDialog({
                     variant="outline"
                     role="combobox"
                     aria-expanded={modelComboOpen}
-                    className="w-full justify-between font-normal"
+                    className="w-full justify-between font-normal "
                   >
                     {modelId
                       ? availableModels.find((m) => m.id === modelId)?.name ?? modelId
@@ -253,18 +283,21 @@ export function ModelSettingsDialog({
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                  <Command>
-                    <CommandInput placeholder="Search models…" />
+                <PopoverContent className=" p-0" align="start">
+                  <Command shouldFilter={false}>
+                    <CommandInput
+                      placeholder="Search models…"
+                      onValueChange={setModelSearch}
+                    />
                     <CommandList>
                       <CommandEmpty>No model found.</CommandEmpty>
                       <CommandGroup>
-                        {availableModels.map((m) => (
+                        {filteredModels.map((m) => (
                           <CommandItem
                             key={m.id}
                             value={m.id}
-                            onSelect={(value) => {
-                              setModelId(value);
+                            onSelect={() => {
+                              setModelId(m.id);
                               setModelComboOpen(false);
                             }}
                           >

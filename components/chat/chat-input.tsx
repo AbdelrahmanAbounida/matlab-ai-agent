@@ -158,11 +158,11 @@ export function ChatInput({
                     src={af.previewUrl}
                     alt={af.file.name}
                     className="h-8 w-8 rounded object-cover"
-                  />
+                  />  
                 ) : (
                   <FileText className="h-4 w-4 text-muted-foreground" />
                 )}
-                <span className="max-w-[120px] truncate text-muted-foreground">
+                <span className="max-w-30 truncate text-muted-foreground">
                   {af.file.name}
                 </span>
                 <button

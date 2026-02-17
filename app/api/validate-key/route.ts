@@ -1,6 +1,6 @@
-import { createGateway } from "@ai-sdk/gateway";
 import { type ProviderId } from "@/lib/model-store";
-import { generateText } from "ai";
+
+const AI_GATEWAY_MODELS_URL = "https://ai-gateway.vercel.sh/v1/models";
 
 export async function POST(req: Request) {
   const { providerId, apiKey } = (await req.json()) as {
@@ -63,26 +63,23 @@ export async function POST(req: Request) {
 
       case "vercel": {
         try {
-         
-          const gateway = createGateway({ 
-            apiKey
-           });
-          await generateText({
-            model: gateway("alibaba/qwen-3-14b"),
-            messages: [
-              {
-                role :"user",
-                content: "hi"
-              }
-            ]
-          })
-          const { models } = await gateway.getAvailableModels();
-          return Response.json({
-            valid: true,
-            models: models.map((m) => ({ id: m.id, name: m.name })),
-          });
-        } catch(err) {
-          return Response.json({ valid: false, error: "Invalid Vercel AI Gateway API key" });
+          const res = await fetch(AI_GATEWAY_MODELS_URL);
+          if (!res.ok) {
+            return Response.json({ valid: false, error: "Failed to fetch Vercel AI Gateway models" });
+          }
+          const data = (await res.json()) as {
+            data: Array<{
+              id: string;
+              name: string;
+              type?: string;
+            }>;
+          };
+          const models = data.data
+            .filter((m) => !m.type || m.type === "language")
+            .map((m) => ({ id: m.id, name: m.name }));
+          return Response.json({ valid: true, models });
+        } catch {
+          return Response.json({ valid: false, error: "Failed to reach Vercel AI Gateway" });
         }
       }
 
