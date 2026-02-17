@@ -11,6 +11,7 @@
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.44",
     "@ai-sdk/deepseek": "^2.0.20",
+    "@ai-sdk/gateway": "^3.0.46",
     "@ai-sdk/openai": "^3.0.29",
     "@ai-sdk/react": "^3.0.88",
     "@ai-sdk/xai": "^3.0.57",

@@ -57,18 +57,7 @@ export const PROVIDERS: ProviderConfig[] = [
     id: "vercel",
     name: "Vercel AI Gateway",
     apiKeyUrl: "https://vercel.com/docs/ai-gateway",
-    models: [
-      { id: "anthropic/claude-sonnet-4-20250514", name: "Claude Sonnet 4" },
-      { id: "anthropic/claude-3-5-sonnet-20241022", name: "Claude 3.5 Sonnet" },
-      { id: "openai/gpt-4.1", name: "GPT-4.1" },
-      { id: "openai/gpt-4.1-mini", name: "GPT-4.1 Mini" },
-      { id: "openai/gpt-4o", name: "GPT-4o" },
-      { id: "openai/gpt-4o-mini", name: "GPT-4o Mini" },
-      { id: "deepseek/deepseek-chat", name: "DeepSeek V3" },
-      { id: "deepseek/deepseek-reasoner", name: "DeepSeek R1" },
-      { id: "xai/grok-3", name: "Grok 3" },
-      { id: "xai/grok-3-mini", name: "Grok 3 Mini" },
-    ],
+    models: [],
   },
 ];
 

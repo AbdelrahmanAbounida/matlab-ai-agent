@@ -1,4 +1,6 @@
+import { createGateway } from "@ai-sdk/gateway";
 import { type ProviderId } from "@/lib/model-store";
+import { generateText } from "ai";
 
 export async function POST(req: Request) {
   const { providerId, apiKey } = (await req.json()) as {
@@ -60,12 +62,28 @@ export async function POST(req: Request) {
       }
 
       case "vercel": {
-        // For Vercel AI Gateway, the key is typically your Vercel token
-        // Just check it's non-empty since there's no simple validation endpoint
-        if (apiKey.length > 10) {
-          return Response.json({ valid: true });
+        try {
+         
+          const gateway = createGateway({ 
+            apiKey
+           });
+          await generateText({
+            model: gateway("alibaba/qwen-3-14b"),
+            messages: [
+              {
+                role :"user",
+                content: "hi"
+              }
+            ]
+          })
+          const { models } = await gateway.getAvailableModels();
+          return Response.json({
+            valid: true,
+            models: models.map((m) => ({ id: m.id, name: m.name })),
+          });
+        } catch(err) {
+          return Response.json({ valid: false, error: "Invalid Vercel AI Gateway API key" });
         }
-        return Response.json({ valid: false, error: "API key seems too short" });
       }
 
       default:

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -16,6 +16,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -26,7 +39,8 @@ import {
   type ModelConfig,
   getProvider,
 } from "@/lib/model-store";
-import { ExternalLink, Loader2, CheckCircle2, XCircle, Eye, EyeOff } from "lucide-react";
+import { ExternalLink, Loader2, CheckCircle2, XCircle, Eye, EyeOff, ChevronsUpDown, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ModelSettingsDialogProps {
   open: boolean;
@@ -53,6 +67,8 @@ export function ModelSettingsDialog({
   const [validation, setValidation] = useState<ValidationState>("idle");
   const [validationError, setValidationError] = useState("");
   const [showApiKey, setShowApiKey] = useState(false);
+  const [gatewayModels, setGatewayModels] = useState<{ id: string; name: string }[]>([]);
+  const [modelComboOpen, setModelComboOpen] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -61,10 +77,18 @@ export function ModelSettingsDialog({
       setModelId(currentConfig?.modelId ?? "");
       setValidation(currentConfig ? "valid" : "idle");
       setValidationError("");
+      setGatewayModels([]);
     }
   }, [open, currentConfig]);
 
   const provider = getProvider(providerId);
+
+  const availableModels = useMemo(() => {
+    if (providerId === "vercel" && gatewayModels.length > 0) {
+      return gatewayModels;
+    }
+    return provider.models;
+  }, [providerId, gatewayModels, provider.models]);
 
   const handleProviderChange = (value: string) => {
     setProviderId(value as ProviderId);
@@ -72,6 +96,7 @@ export function ModelSettingsDialog({
     setModelId("");
     setValidation("idle");
     setValidationError("");
+    setGatewayModels([]);
   };
 
   const handleValidateKey = async () => {
@@ -88,8 +113,12 @@ export function ModelSettingsDialog({
       const data = await res.json();
       if (data.valid) {
         setValidation("valid");
-        if (!modelId && provider.models.length > 0) {
-          setModelId(provider.models[0].id);
+        if (data.models) {
+          setGatewayModels(data.models);
+        }
+        const models = data.models ?? provider.models;
+        if (!modelId && models.length > 0) {
+          setModelId(models[0].id);
         }
       } else {
         setValidation("invalid");
@@ -206,22 +235,53 @@ export function ModelSettingsDialog({
             )}
           </div>
 
-          {/* Model select — shown after validation */}
+          {/* Model combobox — shown after validation */}
           {validation === "valid" && (
             <div className="space-y-2">
               <Label>Model</Label>
-              <Select value={modelId} onValueChange={setModelId}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a model" />
-                </SelectTrigger>
-                <SelectContent>
-                  {provider.models.map((m) => (
-                    <SelectItem key={m.id} value={m.id}>
-                      {m.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover open={modelComboOpen} onOpenChange={setModelComboOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={modelComboOpen}
+                    className="w-full justify-between font-normal"
+                  >
+                    {modelId
+                      ? availableModels.find((m) => m.id === modelId)?.name ?? modelId
+                      : "Select a model…"}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search models…" />
+                    <CommandList>
+                      <CommandEmpty>No model found.</CommandEmpty>
+                      <CommandGroup>
+                        {availableModels.map((m) => (
+                          <CommandItem
+                            key={m.id}
+                            value={m.id}
+                            onSelect={(value) => {
+                              setModelId(value);
+                              setModelComboOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                modelId === m.id ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {m.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
           )}
         </div>

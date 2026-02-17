@@ -5,6 +5,7 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createXai } from "@ai-sdk/xai";
 import { createDeepSeek } from "@ai-sdk/deepseek";
+import { createGateway } from "@ai-sdk/gateway";
 import type { ProviderId } from "@/lib/model-store";
 
 export const maxDuration = 60;
@@ -20,11 +21,7 @@ function getModel(providerId: ProviderId, modelId: string, apiKey: string) {
     case "xai":
       return createXai({ apiKey })(modelId);
     case "vercel":
-      // Vercel AI Gateway uses the OpenAI-compatible format
-      return createOpenAI({
-        apiKey,
-        baseURL: "https://api.vercel.ai/v1",
-      })(modelId);
+      return createGateway({ apiKey })(modelId);
     default:
       throw new Error(`Unknown provider: ${providerId}`);
   }
