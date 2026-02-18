@@ -15,9 +15,9 @@
 <p align="center">
    <img src="public/video2.gif" width="95%" />
 </p>
-<p align="center">
+<!-- <p align="center">
   <img src="public/video11.gif" width="95%" />
-</p>
+</p> -->
 
 ## The Problem
 Building advanced Simulink models is powerful, but the process is slow and repetitive. Manually connecting blocks, searching for the right ones, configuring parameters, and debugging structural issues takes significant time — time that should be spent on actual engineering.
